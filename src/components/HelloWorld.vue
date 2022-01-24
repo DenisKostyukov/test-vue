@@ -1,40 +1,49 @@
 <template>
-  <div class="hello">
-    <h1>{{ msg }}</h1>
-    <p>
-      For a guide and recipes on how to configure / customize this project,<br>
-      check out the
-      <a href="https://cli.vuejs.org" target="_blank" rel="noopener">vue-cli documentation</a>.
-    </p>
-    <h3>Installed CLI Plugins</h3>
-    <ul>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-babel" target="_blank" rel="noopener">babel</a></li>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-eslint" target="_blank" rel="noopener">eslint</a></li>
-    </ul>
-    <h3>Essential Links</h3>
-    <ul>
-      <li><a href="https://vuejs.org" target="_blank" rel="noopener">Core Docs</a></li>
-      <li><a href="https://forum.vuejs.org" target="_blank" rel="noopener">Forum</a></li>
-      <li><a href="https://chat.vuejs.org" target="_blank" rel="noopener">Community Chat</a></li>
-      <li><a href="https://twitter.com/vuejs" target="_blank" rel="noopener">Twitter</a></li>
-      <li><a href="https://news.vuejs.org" target="_blank" rel="noopener">News</a></li>
-    </ul>
-    <h3>Ecosystem</h3>
-    <ul>
-      <li><a href="https://router.vuejs.org" target="_blank" rel="noopener">vue-router</a></li>
-      <li><a href="https://vuex.vuejs.org" target="_blank" rel="noopener">vuex</a></li>
-      <li><a href="https://github.com/vuejs/vue-devtools#vue-devtools" target="_blank" rel="noopener">vue-devtools</a></li>
-      <li><a href="https://vue-loader.vuejs.org" target="_blank" rel="noopener">vue-loader</a></li>
-      <li><a href="https://github.com/vuejs/awesome-vue" target="_blank" rel="noopener">awesome-vue</a></li>
-    </ul>
+  <div>
+    <button v-on:click="fetchData">click on me</button>
+    <button v-on:click="toggleChart"> create</button>
+    <MyChart :dataset="[this.covidData.map(row=>row.deaths)]" :labels="this.covidData.map(row => row.dateRep)"  v-if="isChart"/>
+    <MyChart :dataset="[this.covidData.map(row=>row.popData2020)]" :labels="this.covidData.map(row => row.countriesAndTerritories)" v-if="isChart"/>
+    <MyChart :dataset="[this.covidData.map(row=>row.popData2020), this.covidData.map(row=>row.deaths)]" :labels="this.covidData.map(row => row.countriesAndTerritories)" v-if="isChart"/>
   </div>
+
 </template>
 
 <script>
+import MyChart from "./Chart";
 export default {
   name: 'HelloWorld',
-  props: {
-    msg: String
+  components: {MyChart},
+  data() {
+   return{isChart: false,
+   covidData: []
+   }
+  },
+  methods: {
+    fetchData() {
+      fetch("COVID.csv").then(res => {
+        return res.text()
+      }).then(data => {
+            let jsonObj = []
+            let resultBody = data.split(/\r?\n|\r/)
+            let headers = resultBody[0].split(',')
+            for (let i = 1; i < resultBody.length; i++) {
+              let dataObj = resultBody[i].split(',');
+              let obj = {};
+              for (let j = 0; j < dataObj.length; j++) {
+                obj[headers[j].trim()] = dataObj[j].trim();
+              }
+              jsonObj.push(obj);
+            }
+        console.log(jsonObj)
+        this.covidData = jsonObj
+            return jsonObj
+          }
+      )
+    },
+    toggleChart(){
+      this.isChart = true
+    }
   }
 }
 </script>
@@ -44,14 +53,17 @@ export default {
 h3 {
   margin: 40px 0 0;
 }
+
 ul {
   list-style-type: none;
   padding: 0;
 }
+
 li {
   display: inline-block;
   margin: 0 10px;
 }
+
 a {
   color: #42b983;
 }
